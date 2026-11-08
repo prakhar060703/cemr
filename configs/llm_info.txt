@@ -1,0 +1,31 @@
+"llm": {
+  "api_key": "not-needed",
+  "generator_model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+  "generator_base_url": "http://localhost:8000/v1",
+  "user_sim_model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+  "user_sim_base_url": "http://localhost:8000/v1",
+  "verifier_model": "Qwen/Qwen3.8-27B",
+  "verifier_base_url": "http://localhost:8001/v1",
+  "seed": 13,
+  "enable_thinking": false,
+  "reasoning_effort": "",
+  "max_tokens": 4096,
+  "concurrency": 4
+}
+
+
+
+  "llm": {
+  "api_key": "not-needed",
+  "generator_model": "Qwen/Qwen3.8-27B",
+  "generator_base_url": "http://localhost:8001/v1",
+  "user_sim_model": "Qwen/Qwen3.8-27B",
+  "user_sim_base_url": "http://localhost:8001/v1",
+  "verifier_model": "Qwen/Qwen3.8-27B",
+  "verifier_base_url": "http://localhost:8001/v1",
+  "seed": 13,
+  "enable_thinking": false,
+  "reasoning_effort": "",
+  "max_tokens": 4096,
+  "concurrency": 4
+}

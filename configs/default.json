@@ -1,0 +1,102 @@
+{
+  "llm": {
+    "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+    "generator_model": "gemini-3.1-flash-lite",
+    "generator_base_url": "",
+    "user_sim_model": "gemini-3.1-flash-lite",
+    "user_sim_base_url": "",
+    "verifier_model": "gemini-3.1-flash-lite",
+    "verifier_base_url": "",
+    "temperature": 0.7,
+    "verifier_temperature": 0.0,
+    "seed": null,
+    "enable_thinking": null,
+    "reasoning_effort": "",
+    "max_tokens": 8192,
+    "concurrency": 1,
+    "busy_retries": 3,
+    "busy_backoff": 10.0,
+    "request_timeout": 300.0,
+    "min_request_interval": 30.0,
+    "api_key": "env:GEMINI_API_KEY",
+    "model_quotas": {
+      "gemini-3.8-flash": {
+        "rpm": 5,
+        "tpm": null,
+        "rpd": null
+      },
+      "gemini-3.1-pro-preview": {
+        "rpm": null,
+        "tpm": null,
+        "rpd": null
+      },
+      "gemini-3.1-flash-lite": {
+        "rpm": 15,
+        "tpm": null,
+        "rpd": null
+      },
+      "gemini-2.5-flash": {
+        "rpm": 5,
+        "tpm": null,
+        "rpd": null
+      },
+      "gemini-2.5-pro": {
+        "rpm": null,
+        "tpm": null,
+        "rpd": null
+      }
+    },
+    "quota_state_path": "cov/gemini/gemini_quota.sqlite3"
+  },
+  "data": {
+    "captions_glob": "data/captions/*/*/*.json",
+    "events_glob": "data/events/*/*/*.json",
+    "evidence_index_base": 1,
+    "participants": [],
+    "people": [
+      "jake",
+      "alice",
+      "tasha",
+      "lucia",
+      "katrina",
+      "shure"
+    ],
+    "people_aliases": {
+      "lucian": "lucia",
+      "lucial": "lucia"
+    },
+    "heldout_participants": [],
+    "synonyms_path": "",
+    "index_dir": "outputs/index",
+    "train_days": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "dev_days": [
+      6
+    ],
+    "test_days": [
+      7
+    ]
+  },
+  "mining": {
+    "correct_belief_rate": 0.12,
+    "incomplete_belief_rate": 0.08,
+    "max_candidates_per_task": 2000
+  },
+  "dialoge": {
+    "max_turns": 14,
+    "max_corrections_per_turn": 2,
+    "primary_resistance": 1,
+    "secondary_resistance": 0,
+    "retrieval_top_k": 5
+  },
+  "verify": {
+    "threshold": 0.6,
+    "max_regenerations": 2
+  },
+  "output_dir": "cov/gemini"
+}

@@ -1,0 +1,256 @@
+CEMR: RUN WITH GEMINI (Windows PowerShell)
+=========================================
+
+Generation prints live API attempts/responses, pacing waits, verifier rejection
+reasons, and sample progress to the terminal with the existing command:
+  python -m cemr.cli generate --config configs/default.json --tasks T1 T2 T3 T4 T5 --limit 100
+Add --verbose to include request prompts as well. Full successful call records
+remain in cov/gemini/llm_logs/*.jsonl.
+Quota/credit exhaustion stops immediately without retry. Temporary unavailability
+(including connection failures and temporary rate limits) gets at most 3 retries
+after the initial call, waiting 10, 20, and 40 seconds. If still unavailable, the
+run exits with an error. The default config uses a 60-second request timeout.
+Completed stages remain saved; rerun the same command after restoring API access.
+Verifier content rejection can regenerate twice by default (hard cap: 3 retries).
+
+Run all commands from the repository root:
+  Set-Location 'D:\IIT_KGP_Mtech\MTP_3rd_Semester\MTech Experiments\Gen-Ver-Conv'
+
+1. INSTALL DEPENDENCIES
+-----------------------
+Python 3.10 or newer is required. If using a virtual environment, activate it
+first, then run:
+  python -m pip install -r requirements.txt
+
+2. SET YOUR KEYAvailable text/generation models for your key:
+ - models/gemini-2.5-flash
+ - models/gemini-2.5-pro
+ - models/gemini-2.5-flash-preview-tts
+ - models/gemini-2.5-pro-preview-tts
+ - models/gemma-4-26b-a4b-it
+ - models/gemma-4-31b-it
+ - models/gemini-flash-latest
+ - models/gemini-flash-lite-latest
+ - models/gemini-pro-latest
+ - models/gemini-2.5-flash-lite
+ - models/gemini-2.5-flash-image
+ - models/gemini-3-flash-preview
+ - models/gemini-3.1-pro-preview
+ - models/gemini-3.1-pro-preview-customtools
+ - models/gemini-3.1-flash-lite-preview
+ - models/gemini-3.1-flash-lite
+ - models/gemini-3-pro-image-preview
+ - models/gemini-3-pro-image
+ - models/nano-banana-pro-preview
+ - models/gemini-3.1-flash-image-preview
+ - models/gemini-3.1-flash-image
+ - models/gemini-3.1-flash-lite-image
+ - models/gemini-3.5-flash
+ - models/gemini-3.5-flash-lite
+ - models/gemini-omni-flash-preview
+ - models/gemini-omni-1.1-flash
+ - models/gemini-3.5-transcribe
+ - models/gemini-3.6-flash
+ - models/gemini-3.7-flash
+ - models/gemini-3.8-flash
+ - models/lyria-3-clip-preview
+ - models/lyria-3-pro-preview
+ - models/lyria-3.5
+ - models/gemini-3.1-flash-tts-preview
+ - models/gemini-3.8-flash-tts
+ - models/gemini-3.8-flash-lite-tts
+ - models/gemini-robotics-er-2-preview
+ - models/gemini-2.5-computer-use-preview-10-2025
+ - models/antigravity-preview-05-2026
+ - models/antigravity-preview-09-2026
+ - models/antigravity-preview-latest
+ - models/deep-research-max-preview-04-2026
+ - models/deep-research-preview-04-2026
+ - models/deep-research-pro-preview-12-2025
+---------------
+Open the existing .env file in the repository root and set:
+  GEMINI_API_KEY=your_actual_key_here
+
+Keep the actual key only in .env, not in the JSON configuration.
+The code reads .env automatically; no PowerShell export is necessary.
+An existing GEMINI_API_KEY environment variable takes precedence over .env.
+
+3. CURRENT CONFIGURATION
+------------------------
+The CLI automatically loads configs/default.json:
+  Generator:      gemini-3.8-flash
+  User simulator: gemini-3.8-flash
+  Verifier:       gemini-3.1-pro-preview
+  API endpoint:   https://generativelanguage.googleapis.com/v1beta/openai/
+  API key:        env:GEMINI_API_KEY
+  Output folder:  outputs/gemini
+  Shared index:   outputs/index
+
+No local Qwen server or GPU is needed for these hosted model calls.
+To use another configuration, add --config configs/your_config.json to commands.
+
+4. CHECK MODEL ACCESS
+----------------------
+  python -m cemr.cli check-llm
+
+Expect OK for generator, verifier, and user_sim. This makes live API calls.
+Check failures before starting generation. Generation and evaluation also use
+your Gemini API quota and may incur charges.
+
+5. INDEX AND MINE
+-----------------
+The repository already has an index at outputs/index. Reuse it if the input
+data has not changed. To rebuild it after changing captions/events, run:
+  python -m cemr.cli index
+
+Mine candidates for the new Gemini output directory:
+  python -m cemr.cli mine
+
+Indexing and mining do not call the LLM. The mine command still constructs
+model clients, so configure your key first.
+
+6. RUN A SMALL TRAINING PILOT
+-----------------------------
+  python -m cemr.cli generate --limit 2 --splits train
+  python -m cemr.cli stats
+
+--limit 2 attempts up to 2 NEW usable candidates PER TASK (up to 10 total).
+It does not guarantee 2 accepted conversations per task: validation can reject
+samples, and there may be fewer available candidates.
+
+To try only one task:
+  python -m cemr.cli generate --tasks T1 --limit 2 --splits train
+
+7. REVIEW THE RESULTS
+----------------------
+  outputs/gemini/conversations/  One readable JSON per accepted conversation
+  outputs/gemini/conv.json       Combined accepted conversations
+  outputs/gemini/gt.jsonl        Accepted ground-truth facts
+  outputs/gemini/fm.jsonl        Accepted false memories
+  outputs/gemini/plan.jsonl      Accepted dialogue plans
+  outputs/gemini/rejects.jsonl   Rejected samples and reasons
+  outputs/gemini/funnel.json    Stage counts for the latest generate run
+  outputs/gemini/sft/           Training examples by split
+  outputs/gemini/llm_logs/      Model request/response logs
+
+Export training conversations for human review:
+  python -m cemr.cli export-review --split train
+
+Check that evidence actually supports each correction, including its day/time.
+A converged belief state alone does not guarantee a fully grounded dialogue.
+
+8. GENERATE MORE DATA
+---------------------
+After reviewing the pilot, attempt up to 20 new candidates per task:
+  python -m cemr.cli generate --limit 20 --splits train
+
+Generate held-out test conversations before evaluating:
+  python -m cemr.cli generate --limit 10 --splits test
+  python -m cemr.cli export-review --split test
+
+Train days: 1-5. Dev day: 6. Test day: 7.
+To process all remaining candidates across all splits:
+  python -m cemr.cli generate
+
+9. EVALUATE ASSISTANTS
+----------------------
+These commands need accepted conversations in the test split. The evaluation
+model is the assistant being tested; the configured verifier is a separate role.
+
+Start with a small evaluation:
+  python -m cemr.cli evaluate --model gemini-3.8-flash --split test --mode multi_turn --limit 2
+
+Compare models on the same frozen test dataset and simulator:
+  python -m cemr.cli evaluate --model gemini-3.1-flash-lite --split test --mode multi_turn
+  python -m cemr.cli evaluate --model gemini-3.8-flash --split test --mode multi_turn
+  python -m cemr.cli evaluate --model gemini-3.1-pro-preview --split test --mode multi_turn
+
+Run the single-turn baseline (repeat for each comparison model as needed):
+  python -m cemr.cli evaluate --model gemini-3.8-flash --split test --mode single_turn
+
+Results are saved under:
+  outputs/gemini/eval/<model>/<split>_<mode>/records.jsonl
+  outputs/gemini/eval/<model>/<split>_<mode>/metrics.json
+
+Evaluation --limit is a total sample limit, not a per-task limit.
+
+10. RESUMING AND TROUBLESHOOTING
+--------------------------------
+- Rerun generate to continue. Completed and rejected samples are skipped;
+  accepted intermediate stages are reused. Infrastructure crashes are retried
+  on the next run. --limit counts new generation attempts.
+- For a fresh experiment after changing models/prompts, choose a new output_dir
+  in a config file and run mine again. Reusing an output directory reuses saved
+  stages rather than regenerating them with the new settings.
+- Evaluation resumes from saved records. Use a separate experiment directory
+  when changing evaluation conditions. Recorded evaluation errors are also
+  skipped on reruns; inspect records.jsonl before treating a run as complete.
+- No candidates: run mine for the configured output directory and check that
+  the requested split has source data.
+- Missing key: fill in GEMINI_API_KEY in the repo-root .env file.
+- Missing dotenv module: rerun python -m pip install -r requirements.txt.
+- Authentication/model access failure: verify the API key, model ID, and quota.
+- Rate limits: concurrency is already 1; the client retries temporary failures.
+- No test results: generate accepted test-split conversations first.
+
+Show all CLI arguments:
+  python -m cemr.cli --help
+
+11. TOKEN AND QUOTA GUARDS
+--------------------------
+Gemini text requests are counted with Google's countTokens endpoint before
+generation. The full system prompt and chat history are included. The guard
+reserves 1,024 tokens for framing differences plus the configured output budget
+inside the input ceiling, conservatively. Oversized requests are stopped rather
+than silently dropping evidence. Failed counting also stops generation.
+The configured output cap must be within the model's published maximum.
+Truncated output is logged and treated as an infrastructure failure rather than
+a bad dataset sample. Usage returned by the API is included in llm_logs.
+
+In configs/default.json, llm.model_quotas has rpm, tpm, and rpd for each model.
+Replace null values with your actual positive-integer AI Studio project quotas.
+Null means UNKNOWN / NOT ENFORCED, not unlimited. Until these values are supplied,
+the program cannot ensure compliance with your project's rate or daily limits.
+
+Counters are shared across roles and processes using the same SQLite file:
+  outputs/gemini_quota.sqlite3
+Keep that file across runs. Minute limits wait for capacity; the daily limit
+stops requests using a conservative rolling 24-hour window (not Pacific midnight).
+Failed generation attempts and retries count against local budgets. SDK automatic
+retries are disabled. Separate model counters prevent Flash and Pro being mixed.
+Other applications, other state files, metadata requests, and countTokens calls
+are not tracked by this local generation limiter. Leave quota headroom for other
+project traffic; Google remains authoritative for project-wide enforcement.
+
+Supported guarded models: gemini-3.8-flash, gemini-3.1-pro-preview,
+gemini-3.1-flash-lite. Verify and add capacities to cemr/limits.py before using
+another Gemini model. Evaluation uses the same guards as generation.
+
+=================================================================
+
+# 1. Build the index (run once or when data changes)
+python -m cemr.cli index --config configs/default.json
+
+# 2. Mine candidates (run periodically as you add data)
+python -m cemr.cli mine --config configs/default.json
+
+# 3. Generate conversations (this will now respect the 30-second interval)
+python -m cemr.cli generate --config configs/default.json --tasks T1 T2 T3 T4 T5 --limit 100
+
+# 4. Evaluate results (optional)
+python -m cemr.cli evaluate --config configs/default.json --model Qwen/Qwen2.5-7B-Instruct --split test
+
+
+
+===========
+# Check if the Python process is still running
+Get-WmiObject Win32_Process | 
+    Where-Object { $_.CommandLine -like "*cemr*generate*" -and $_.CommandLine -like "*python*" } | 
+    Measure-Object | 
+    Select-Object Count
+
+Get-WmiObject Win32_Process | 
+    Where-Object { $_.CommandLine -like "*cemr*" -and $_.CommandLine -like "*generate*" } | 
+    Select-Object ProcessId, ProcessName, @{Label='Command';Expression={($_.CommandLine -split 'python -m cemr.cli')[1]}} | 
+    Format-Table -AutoSize
+

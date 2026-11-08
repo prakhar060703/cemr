@@ -1,0 +1,27 @@
+Gemini model token limits
+=========================
+
+Model                    Usage                       Max input tokens/request  Max output tokens/request
+-----------------------  --------------------------  ------------------------  -------------------------
+Gemini 3.8 Flash         Generator + user simulator   1,048,576                 65,536
+Gemini 3.1 Pro Preview   Verifier                     1,048,576                 65,536
+Gemini 3.1 Flash-Lite    Optional evaluation model    1,048,576                 65,536
+
+These are model limits, not requests-per-minute or requests-per-day quotas.
+The repository currently configures max_tokens to 8,192 per call.
+
+Project quotas read from the supplied AI Studio screenshot:
+Model                    RPM    TPM         RPD
+-----------------------  -----  ----------  ----------
+Gemini 3.8 Flash         5      Not visible Not visible
+Gemini 3.1 Flash-Lite    15     Not visible Not visible
+Gemini 3.1 Pro Preview   Unknown Unknown     Unknown
+
+The screenshot shows usage / limit. Only the complete RPM denominators
+were copied into configs/default.json. TPM denominators are cropped;
+daily limits and the Pro verifier row are not visible.
+
+Sources (checked September 28, 2026):
+https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash
+https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview
+https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite
